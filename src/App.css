@@ -1,9 +1,11 @@
-body {
-  overflow: hidden;
+.App {
+  text-align: center;
+  margin: 1em 10%;
+  padding: 0;
+  border: 0;
 }
 
-.App, canvas {
-  text-align: center;
+canvas {
   margin: 0;
   padding: 0;
   border: 0;
