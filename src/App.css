@@ -1,5 +1,12 @@
-.App {
+body {
+  overflow: hidden;
+}
+
+.App, canvas {
   text-align: center;
+  margin: 0;
+  padding: 0;
+  border: 0;
 }
 
 .App-logo {
