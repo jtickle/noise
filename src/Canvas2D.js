@@ -24,25 +24,38 @@ import PerfMon from './PerfMon'
 const Canvas2D = ({ draw, ratio }) => {
   const canvas = React.useRef()
 
-  const [width, setWidth] = React.useState(0)
+  const [cwidth, setWidth] = React.useState(0)
 
   const bus = new EventBus()
 
-  React.useEffect(() => {
-    // Pass canvas to draw function
-    const start = performance.now()
-    const [min, max] =
-      draw(canvas.current.getContext('2d'), width, width * ratio)
-    bus.set('Render Time', performance.now() - start)
-    bus.set('Min Val', min)
-    bus.set('Max Val', max)
+  function drawCanvas () {
+    const width = Math.floor(cwidth)
+    const height = Math.floor(width * ratio)
+    const context = canvas.current.getContext('2d')
 
-    // Deal with container resize
-    function handleResize () {
-      setWidth(canvas.current.parentElement.clientWidth)
-    }
+    if (width === 0) return
+    const initImageData = context.createImageData(width, height)
+
+    const start = performance.now()
+    const [imageData, min, max] = draw(initImageData, width, height)
+    bus.extend({
+      'Render Time': performance.now() - start,
+      'Min Val': min,
+      'Max Val': max
+    })
+
+    context.putImageData(imageData, 0, 0)
+  }
+
+  function handleResize () {
+    setWidth(canvas.current.parentElement.clientWidth)
+  }
+
+  React.useEffect(() => {
+    drawCanvas()
+
     window.addEventListener('resize', handleResize)
-    if (width === 0) {
+    if (cwidth === 0) {
       handleResize()
     }
     return _ => {
@@ -52,7 +65,7 @@ const Canvas2D = ({ draw, ratio }) => {
 
   return (
     <>
-      <canvas ref={canvas} height={width * ratio} width={width} />
+      <canvas ref={canvas} height={cwidth * ratio} width={cwidth} />
       <PerfMon bus={bus}/>
     </>
   )

@@ -96,15 +96,9 @@ function drawFactoryXOnly (fn) {
    * @param {number} width
    * @param {number} height
    */
-  return (context, width, height) => {
-    width = Math.floor(width)
-    height = Math.floor(height)
-
+  return (imageData, width, height) => {
     let min = Number.MAX_VALUE
     let max = Number.MIN_VALUE
-
-    if (width === 0) return [0, 0]
-    const imageData = context.createImageData(width, height)
 
     const row = new Uint8ClampedArray(width * 4)
     for (let i = 0; i < width; i++) {
@@ -121,10 +115,7 @@ function drawFactoryXOnly (fn) {
         imageData.data[i * width * 4 + j] = row[j]
       }
     }
-
-    context.putImageData(imageData, 0, 0)
-
-    return [min, max]
+    return [imageData, min, max]
   }
 }
 
@@ -135,15 +126,9 @@ function drawFactoryXY (fn) {
    * @param {number} width
    * @param {number} height
    */
-  return (context, width, height) => {
-    width = Math.floor(width)
-    height = Math.floor(height)
-
+  return (imageData, width, height) => {
     let min = Number.MAX_VALUE
     let max = Number.MIN_VALUE
-
-    if (width === 0) return [0, 0]
-    const imageData = context.createImageData(width, height)
 
     for (let y = height - 1; y >= 0; y--) {
       for (let x = 0; x < width; x++) {
@@ -158,9 +143,7 @@ function drawFactoryXY (fn) {
       }
     }
 
-    context.putImageData(imageData, 0, 0)
-
-    return [min, max]
+    return [imageData, min, max]
   }
 }
 

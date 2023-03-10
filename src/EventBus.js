@@ -29,6 +29,11 @@ class EventBus {
     this.listeners.delete(fn)
   }
 
+  extend (obj) {
+    this.values = { ...this.values, ...obj }
+    this.dispatch(this.values)
+  }
+
   set (key, val) {
     this.values[key] = val
     this.dispatch(this.values)
