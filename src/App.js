@@ -18,7 +18,8 @@
 import React from 'react'
 import Canvas2D from './Canvas2D.js'
 
-import { makeNoise2D } from 'open-simplex-noise'
+import { makeNoise2D } from 'fast-simplex-noise'
+import fastRandom from 'fast-random'
 
 import './App.css'
 
@@ -51,20 +52,30 @@ function cos2dFn (x, y) {
 }
 
 const start = performance.now()
-const noise2D = makeNoise2D(3)
+const noise2D = [1, 2, 3].map((n) => {
+  const generator = fastRandom(n)
+  return makeNoise2D(generator.nextFloat)
+})
+/* const noise2D = [
+   makeNoise2D(30),
+   makeNoise2D(40),
+   makeNoise2D(50)
+] */
 console.log(`Generated noise2d in ${performance.now() - start}ms`)
-function noise2dFn (x, y) {
-  return noise2D(x * 20, y * 20) / 2 + 0.5
+function noise2dFn (x, y, c) {
+  if (typeof c === 'undefined') c = 0
+  return noise2D[c](x * 20, y * 20) / 2 + 0.5
 }
 
 function mkFractal2dFn (amplitude, frequency, octaves, persistence) {
-  return (x, y) => {
+  return (x, y, c) => {
+    if (typeof c === 'undefined') c = 0
     x = x * 20
     y = y * 20
     let value = 0.0
     for (let octave = 0; octave < octaves; octave++) {
       const freq = frequency * Math.pow(2, octave)
-      value += noise2D(x * freq, y * freq) *
+      value += noise2D[c](x * freq, y * freq) *
         (amplitude * Math.pow(persistence, octave))
     }
     return value / (2 - 1 / Math.pow(2, octaves - 1)) / 4 + 0.5
@@ -72,14 +83,15 @@ function mkFractal2dFn (amplitude, frequency, octaves, persistence) {
 }
 
 function mkMultFractal2dFn (amplitude, frequency, octaves, persistence) {
-  return (x, y) => {
+  return (x, y, c) => {
+    if (typeof c === 'undefined') c = 0
     // x = x * 20
     // y = y * 20
     let value = 1.0
     for (let octave = 0; octave < octaves; octave++) {
       const freq = frequency * Math.pow(2, octave)
       // value += noise2D(x * freq, y * freq) *
-      value *= noise2dFn(x * freq, y * freq) *
+      value *= noise2dFn(x * freq, y * freq, c) *
         (amplitude * Math.pow(persistence, octave))
     }
     // More Dramatic
@@ -147,6 +159,39 @@ function drawFactoryXY (fn) {
   }
 }
 
+function drawFactoryXYC (fn) {
+  /**
+   * @param {CanvasRenderingContext2D} context
+   * @param {number} width
+   * @param {number} height
+   */
+  return (imageData, width, height) => {
+    let min = Number.MAX_VALUE
+    let max = Number.MIN_VALUE
+
+    for (let y = height - 1; y >= 0; y--) {
+      for (let x = 0; x < width; x++) {
+        // eslint-disable-next-line no-unused-vars
+        const Rvalue = Math.floor(fn(x / width, y / height, 0) * 255)
+        const Gvalue = Math.floor(fn(x / width, y / height, 1) * 255)
+        const Bvalue = Math.floor(fn(x / width, y / height, 2) * 255)
+        if (Rvalue > max) max = Rvalue
+        if (Rvalue < min) min = Rvalue
+        if (Gvalue > max) max = Gvalue
+        if (Gvalue < min) min = Gvalue
+        if (Bvalue > max) max = Bvalue
+        if (Bvalue < min) min = Bvalue
+        imageData.data[y * width * 4 + x * 4 + 0] = Rvalue
+        imageData.data[y * width * 4 + x * 4 + 1] = Gvalue
+        imageData.data[y * width * 4 + x * 4 + 2] = Bvalue
+        imageData.data[y * width * 4 + x * 4 + 3] = 255
+      }
+    }
+
+    return [imageData, min, max]
+  }
+}
+
 function App () {
   return (
     <div className="App">
@@ -169,9 +214,15 @@ function App () {
       <h2>f(x) = noise2D(x, y)</h2>
       <Canvas2D draw={drawFactoryXY(noise2dFn)} ratio={0.6}/>
       <h2>f(x) = fractal2D(x, y)</h2>
-      <Canvas2D draw={drawFactoryXY(mkFractal2dFn(1, 0.1, 8, 1.0))} ratio={0.6}/>
+      <Canvas2D draw={drawFactoryXY(mkFractal2dFn(1, 0.1, 8, 1.0))} ratio={1}/>
       <h2>f(x) = multFractal2D(x, y)</h2>
-      <Canvas2D draw={drawFactoryXY(mkMultFractal2dFn(1, 0.1, 8, 1.0))} ratio={0.6}/>
+      <Canvas2D draw={drawFactoryXY(mkMultFractal2dFn(1, 0.1, 8, 1.0))} ratio={1}/>
+      <h1>How about some COLOR</h1>
+      <Canvas2D draw={drawFactoryXYC(noise2dFn)} ratio={1}/>
+      <h2>f(x) = fractal2D(x, y)</h2>
+      <Canvas2D draw={drawFactoryXYC(mkFractal2dFn(1, 0.1, 8, 1.0))} ratio={1}/>
+      <h2>f(x) = multFractal2D(x, y)</h2>
+      <Canvas2D draw={drawFactoryXYC(mkMultFractal2dFn(1, 0.1, 8, 1.0))} ratio={1}/>
     </div>
   )
 }
