@@ -18,14 +18,24 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 
+import EventBus from './EventBus'
+import PerfMon from './PerfMon'
+
 const Canvas2D = ({ draw, ratio }) => {
   const canvas = React.useRef()
 
   const [width, setWidth] = React.useState(0)
 
+  const bus = new EventBus()
+
   React.useEffect(() => {
     // Pass canvas to draw function
-    draw(canvas.current.getContext('2d'), width, width * ratio)
+    const start = performance.now()
+    const [min, max] =
+      draw(canvas.current.getContext('2d'), width, width * ratio)
+    bus.set('Render Time', performance.now() - start)
+    bus.set('Min Val', min)
+    bus.set('Max Val', max)
 
     // Deal with container resize
     function handleResize () {
@@ -41,7 +51,10 @@ const Canvas2D = ({ draw, ratio }) => {
   })
 
   return (
-    <canvas ref={canvas} height={width * ratio} width={width} />
+    <>
+      <canvas ref={canvas} height={width * ratio} width={width} />
+      <PerfMon bus={bus}/>
+    </>
   )
 }
 
