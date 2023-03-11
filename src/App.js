@@ -1,4 +1,4 @@
-/* Experiments with Dunamic Texturing
+/* Experiments with Dynamic Texturing
  * Copyright (C) 2022  Jeffrey W. Tickle
  *
  * This program is free software: you can redistribute it and/or modify
@@ -16,10 +16,10 @@
  */
 
 import React from 'react'
-import Canvas2D from './Canvas2D.js'
-
 import { makeNoise2D } from 'fast-simplex-noise'
 import fastRandom from 'fast-random'
+
+import Canvas2D from './Canvas2D.js'
 
 import './App.css'
 
