@@ -17,23 +17,26 @@
 
 import React from 'react'
 import PropTypes from 'prop-types'
-import EventBus from './EventBus'
 
-const PerfMon = ({ bus }) => {
+const PerfMon = ({ perf }) => {
   const [data, setData] = React.useState({})
 
   React.useEffect(() => {
-    bus.addListener(setData)
-    return _ => {
-      bus.removeListener(setData)
-    }
+    perf.then(data => {
+      setData(data)
+    })
   })
 
-  return Object.entries(data).map(([key, value]) => <p key={key}>{key}: {value}</p>)
+  return (
+    <div className="performance">
+      {Object.entries(data).map(([key, value]) =>
+        <p key={key}>{key}{String(value).padStart(8, '.')}</p>)}
+    </div>
+  )
 }
 
 PerfMon.propTypes = {
-  bus: PropTypes.instanceOf(EventBus).isRequired
+  perf: PropTypes.instanceOf(Promise).isRequired
 }
 
 export default PerfMon

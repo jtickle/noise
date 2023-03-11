@@ -18,7 +18,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 
-import EventBus from './EventBus'
 import PerfMon from './PerfMon'
 
 const Canvas2D = ({ draw, ratio }) => {
@@ -26,9 +25,13 @@ const Canvas2D = ({ draw, ratio }) => {
 
   const [cwidth, setWidth] = React.useState(0)
 
-  const bus = new EventBus()
+  function handleResize () {
+    setWidth(Math.floor(canvas.current.parentElement.clientWidth))
+  }
 
-  function drawCanvas () {
+  // const bus = new EventBus()
+
+  function drawCanvas (resolvePerformance) {
     const width = Math.floor(cwidth)
     const height = Math.floor(width * ratio)
     const context = canvas.current.getContext('2d')
@@ -38,7 +41,7 @@ const Canvas2D = ({ draw, ratio }) => {
 
     const start = performance.now()
     const [imageData, min, max] = draw(initImageData, width, height)
-    bus.extend({
+    resolvePerformance({
       'Render Time': performance.now() - start,
       'Min Val': min,
       'Max Val': max
@@ -47,27 +50,25 @@ const Canvas2D = ({ draw, ratio }) => {
     context.putImageData(imageData, 0, 0)
   }
 
-  function handleResize () {
-    setWidth(canvas.current.parentElement.clientWidth)
-  }
+  const perf = new Promise((resolve, reject) => {
+    React.useEffect(() => {
+      drawCanvas(resolve)
 
-  React.useEffect(() => {
-    drawCanvas()
-
-    window.addEventListener('resize', handleResize)
-    if (cwidth === 0) {
-      handleResize()
-    }
-    return _ => {
-      window.removeEventListener('resize', handleResize)
-    }
+      window.addEventListener('resize', handleResize)
+      if (cwidth === 0) {
+        handleResize()
+      }
+      return _ => {
+        window.removeEventListener('resize', handleResize)
+      }
+    })
   })
 
   return (
-    <>
-      <canvas ref={canvas} height={cwidth * ratio} width={cwidth} />
-      <PerfMon bus={bus}/>
-    </>
+    <div className="canvas2d">
+      <canvas ref={canvas} height={Math.floor(cwidth * ratio)} width={cwidth} />
+      <PerfMon perf={perf}/>
+    </div>
   )
 }
 
