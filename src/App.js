@@ -56,11 +56,6 @@ const noise2D = [1, 2, 3].map((n) => {
   const generator = fastRandom(n)
   return makeNoise2D(generator.nextFloat)
 })
-/* const noise2D = [
-   makeNoise2D(30),
-   makeNoise2D(40),
-   makeNoise2D(50)
-] */
 console.log(`Generated noise2d in ${performance.now() - start}ms`)
 function noise2dFn (x, y, c) {
   if (typeof c === 'undefined') c = 0
@@ -70,34 +65,30 @@ function noise2dFn (x, y, c) {
 function mkFractal2dFn (amplitude, frequency, octaves, persistence) {
   return (x, y, c) => {
     if (typeof c === 'undefined') c = 0
-    x = x * 20
-    y = y * 20
+    x = x * 10
+    y = y * 10
     let value = 0.0
     for (let octave = 0; octave < octaves; octave++) {
       const freq = frequency * Math.pow(2, octave)
       value += noise2D[c](x * freq, y * freq) *
         (amplitude * Math.pow(persistence, octave))
     }
-    return value / (2 - 1 / Math.pow(2, octaves - 1)) / 4 + 0.5
+    return value / (2 - 1 / Math.pow(2, octaves - 1)) / 2 + 0.5
   }
 }
 
 function mkMultFractal2dFn (amplitude, frequency, octaves, persistence) {
   return (x, y, c) => {
     if (typeof c === 'undefined') c = 0
-    // x = x * 20
-    // y = y * 20
+    x = x * 20
+    y = y * 20
     let value = 1.0
     for (let octave = 0; octave < octaves; octave++) {
       const freq = frequency * Math.pow(2, octave)
-      // value += noise2D(x * freq, y * freq) *
       value *= noise2dFn(x * freq, y * freq, c) *
         (amplitude * Math.pow(persistence, octave))
     }
-    // More Dramatic
-    // return value / (2 - 1 / Math.pow(2, octaves - 1)) * 32
-    // Brighter
-    return Math.log2(value / (2 - 1 / Math.pow(2, octaves - 1))) / 12 + 1.5
+    return value * (6)
   }
 }
 
@@ -159,6 +150,7 @@ function drawFactoryXY (fn) {
   }
 }
 
+// eslint-disable-next-line no-unused-vars
 function drawFactoryXYC (fn) {
   /**
    * @param {CanvasRenderingContext2D} context
@@ -214,7 +206,7 @@ function App () {
       <h2>f(x) = noise2D(x, y)</h2>
       <Canvas2D draw={drawFactoryXY(noise2dFn)} ratio={0.6}/>
       <h2>f(x) = fractal2D(x, y)</h2>
-      <Canvas2D draw={drawFactoryXY(mkFractal2dFn(1, 0.1, 8, 1.0))} ratio={1}/>
+      <Canvas2D draw={drawFactoryXY(mkFractal2dFn(1.0, 1.0, 8, 0.5))} ratio={1}/>
       <h2>f(x) = multFractal2D(x, y)</h2>
       <Canvas2D draw={drawFactoryXY(mkMultFractal2dFn(1, 0.1, 8, 1.0))} ratio={1}/>
       <h1>How about some COLOR</h1>
@@ -226,5 +218,7 @@ function App () {
     </div>
   )
 }
+
+App.mkFractal2dFn = mkFractal2dFn
 
 export default App
