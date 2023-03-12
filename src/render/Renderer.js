@@ -18,9 +18,8 @@
 /**
  * Render one row and repeat it for all Y, monochrome
  * @param {function} algorithm
- * @param {CanvasRenderingContext2D} context
- * @param {number} width
- * @param {number} height
+ * @param {ImageData} imageData
+ * @param {object} dimension
  */
 function renderX (algorithm, imageData, dimension) {
   let min = Number.MAX_VALUE
@@ -48,9 +47,8 @@ function renderX (algorithm, imageData, dimension) {
 /**
  * Render each pixel, monochrome
  * @param {function} algorithm
- * @param {CanvasRenderingContext2D} context
- * @param {number} width
- * @param {number} height
+ * @param {ImageData} imageData
+ * @param {object} dimension
  */
 function renderXY (algorithm, imageData, dimension) {
   let min = Number.MAX_VALUE
@@ -76,9 +74,8 @@ function renderXY (algorithm, imageData, dimension) {
 /**
  * Render each pixel with color component
  * @param {function} algorithm
- * @param {CanvasRenderingContext2D} context
- * @param {number} width
- * @param {number} height
+ * @param {ImageData} imageData
+ * @param {object} dimension
  */
 function renderXYC (algorithm, imageData, dimension) {
   let min = Number.MAX_VALUE

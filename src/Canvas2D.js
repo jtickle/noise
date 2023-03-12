@@ -19,9 +19,8 @@ import React from 'react'
 import PropTypes from 'prop-types'
 
 import PerfMon from './PerfMon'
-import RenderThread from './render/RenderThread'
 
-const Canvas2D = ({ renderer, algorithm, ratio }) => {
+const Canvas2D = ({ render, ratio }) => {
   const canvas = React.useRef()
 
   const [dimension, setDimension] = React.useState({
@@ -57,21 +56,17 @@ const Canvas2D = ({ renderer, algorithm, ratio }) => {
         return
       }
 
-      // Set up the imageData and renderThread
+      // Set up the imageData for rendering
       const context = canvas.current.getContext('2d')
       const imageData = context.createImageData(dimension.width, dimension.height)
-      const renderThread = new RenderThread()
 
-      // Run the render thread
-      renderThread.run(
-        renderer,
-        algorithm,
-        imageData,
-        dimension
-      ).then((result) => {
+      // Render the canvas (or promise to)
+      render(imageData, dimension).then((result) => {
         // Report performance after render job is complete
         resolve({
           'Render Time': result.runtime,
+          'Thread Time': result.threadtime,
+          'Queue Time': result.queuetime,
           'Min Val': result.min,
           'Max Val': result.max
         })
@@ -90,8 +85,7 @@ const Canvas2D = ({ renderer, algorithm, ratio }) => {
 }
 
 Canvas2D.propTypes = {
-  renderer: PropTypes.string.isRequired,
-  algorithm: PropTypes.array.isRequired,
+  render: PropTypes.func.isRequired,
   ratio: PropTypes.number.isRequired
 }
 
