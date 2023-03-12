@@ -24,7 +24,7 @@ const PerfMon = ({ perf }) => {
   React.useEffect(() => {
     perf.then(data => {
       setData(data)
-    })
+    }, _ => {})
   })
 
   return (

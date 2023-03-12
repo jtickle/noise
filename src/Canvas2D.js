@@ -19,61 +19,79 @@ import React from 'react'
 import PropTypes from 'prop-types'
 
 import PerfMon from './PerfMon'
+import RenderThread from './render/RenderThread'
 
-const Canvas2D = ({ draw, ratio }) => {
+const Canvas2D = ({ renderer, algorithm, ratio }) => {
   const canvas = React.useRef()
 
-  const [cwidth, setWidth] = React.useState(0)
+  const [dimension, setDimension] = React.useState({
+    width: 0,
+    height: 0
+  })
 
   function handleResize () {
-    setWidth(Math.floor(canvas.current.parentElement.clientWidth))
-  }
-
-  // const bus = new EventBus()
-
-  function drawCanvas (resolvePerformance) {
-    const width = Math.floor(cwidth)
+    const width = Math.floor(canvas.current.parentElement.clientWidth)
     const height = Math.floor(width * ratio)
-    const context = canvas.current.getContext('2d')
-
-    if (width === 0) return
-    const initImageData = context.createImageData(width, height)
-
-    const start = performance.now()
-    const [imageData, min, max] = draw(initImageData, width, height)
-    resolvePerformance({
-      'Render Time': performance.now() - start,
-      'Min Val': min,
-      'Max Val': max
-    })
-
-    context.putImageData(imageData, 0, 0)
+    setDimension({ width, height })
   }
 
+  // Handle resize event
+  React.useEffect(() => {
+    // TODO: use window.ResizeObserver if exists
+    // https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver
+    window.addEventListener('resize', handleResize)
+    if (dimension.width === 0) handleResize()
+    return _ => {
+      window.removeEventListener('resize', handleResize)
+    }
+  })
+
+  // This unfortunate trick allows us to get the performance data
+  // after the render happens and pass it to the PerfMon child via
+  // promise, which should not trigger re-render for the canvas
   const perf = new Promise((resolve, reject) => {
     React.useEffect(() => {
-      drawCanvas(resolve)
+      // If we don't have a size yet, clean up and don't bother rendering
+      if (dimension.width === 0) {
+        reject(new Error('Canvas does not yet have a size'))
+        return
+      }
 
-      window.addEventListener('resize', handleResize)
-      if (cwidth === 0) {
-        handleResize()
-      }
-      return _ => {
-        window.removeEventListener('resize', handleResize)
-      }
+      // Set up the imageData and renderThread
+      const context = canvas.current.getContext('2d')
+      const imageData = context.createImageData(dimension.width, dimension.height)
+      const renderThread = new RenderThread()
+
+      // Run the render thread
+      renderThread.run(
+        renderer,
+        algorithm,
+        imageData,
+        dimension
+      ).then((result) => {
+        // Report performance after render job is complete
+        resolve({
+          'Render Time': result.runtime,
+          'Min Val': result.min,
+          'Max Val': result.max
+        })
+        // Paint the canvas
+        context.putImageData(result.imageData, 0, 0)
+      })
     })
   })
 
   return (
     <div className="canvas2d">
-      <canvas ref={canvas} height={Math.floor(cwidth * ratio)} width={cwidth} />
+      <canvas ref={canvas} height={dimension.height} width={dimension.width} />
       <PerfMon perf={perf}/>
     </div>
   )
 }
 
 Canvas2D.propTypes = {
-  draw: PropTypes.func.isRequired,
+  renderer: PropTypes.string.isRequired,
+  algorithm: PropTypes.array.isRequired,
   ratio: PropTypes.number.isRequired
 }
 
